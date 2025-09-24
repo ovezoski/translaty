@@ -5,6 +5,8 @@
 И ако се притисне врз некој збор, ќе се повика Google Translate API за неколку јазици и како облачиња околу зборот ќе се дадат преводите на тој збор.
 Од кој на кои јазици ќе се преведува ќе има посебна страна за поставување (Settings).
 
+https://github.com/user-attachments/assets/99970369-1a86-42de-997f-65b6561c1932
+
 # Welcome to your Expo app 👋
 
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
