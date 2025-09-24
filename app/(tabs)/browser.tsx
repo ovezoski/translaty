@@ -1,5 +1,6 @@
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { useLangConfig } from "@/contexts/LangConfigContext";
 import { useState, useRef } from "react";
 import {
   Button,
@@ -20,10 +21,12 @@ const injectedCSS = `
 
 export default function Browser() {
   const colorScheme = useColorScheme();
+  const { selectedSource, selectedDest } = useLangConfig()
+  const webViewRef = useRef<WebView>(null);
 
   const [text, setText] = useState<string>("https://www.finki.ukim.mk/mk/student-announcement");
   const [urlToLoad, setUrlToLoad] = useState<string>("");
-  const prevUrl = useRef<string[]>([]);
+  const [canGoBack, setCanGoBack] = useState(false);
 
   const [selection, setSelection] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
@@ -37,12 +40,17 @@ export default function Browser() {
   };
 
   const handleGoBack = () => {
-    setUrlToLoad(prevUrl.current.pop() ?? "")
+    if (canGoBack && webViewRef?.current) {
+      webViewRef.current.goBack();
+      return true;
+    }
+    return false;
   };
 
   const handleClear = () => {
     setSelection("");
     setTranslation("");
+    setUrlToLoad("")
     setSelectionIsExpanded(false)
   };
 
@@ -54,7 +62,7 @@ export default function Browser() {
       const response = await fetch(`https://translation.googleapis.com/language/translate/v2?key=${CLOUD_TRANSLATION_API_KEY}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ q: selection, source: 'mk', target: 'de', format: 'text' }),
+        body: JSON.stringify({ q: selection, source: selectedSource, target: selectedDest, format: 'text' }),
       });
       const res = await response.json();
       const translatedText = res.data.translations[0].translatedText;
@@ -71,6 +79,7 @@ export default function Browser() {
     return (
       <ThemedView style={styles.flexContainer}>
         <WebView
+          ref={webViewRef}
           source={{ uri: urlToLoad }}
           style={styles.webview}
           onMessage={(event) => {
@@ -78,10 +87,8 @@ export default function Browser() {
             setTranslation("")
           }}
           onNavigationStateChange={(navState) => {
-            if (navState.url !== urlToLoad) {
-              prevUrl.current.push(urlToLoad);
-              setUrlToLoad(navState.url);
-            }
+            setUrlToLoad(navState.url);
+            setCanGoBack(navState.canGoBack)
           }}
           injectedJavaScript={`
             document.addEventListener("selectionchange", function() {
@@ -130,8 +137,12 @@ export default function Browser() {
           </ThemedView>
         )}
         <View style={styles.buttonsContainer}>
-          <TouchableOpacity style={{ width: "33.3%", height: "100%", justifyContent: "center", alignItems: "center" }} onPress={handleGoBack}>
-            <ThemedText type="link">Back</ThemedText>
+          <TouchableOpacity 
+            onPress={handleGoBack}
+            disabled={!canGoBack}
+            style={{ width: "33.3%", height: "100%", justifyContent: "center", alignItems: "center" }} 
+          >
+            <ThemedText type={canGoBack ? 'link' : 'default'}>Back</ThemedText>
           </TouchableOpacity>
           {loading ? (
             <ActivityIndicator style={{ width: "33.3%" }} />
@@ -145,7 +156,7 @@ export default function Browser() {
           </TouchableOpacity>
           )}
           <TouchableOpacity style={{ width: "33.3%", height: "100%", justifyContent: "center", alignItems: "center" }} onPress={handleClear}>
-            <ThemedText type="link">Clear</ThemedText>
+            <ThemedText type="link">Exit</ThemedText>
           </TouchableOpacity>
         </View>
       </ThemedView>
@@ -201,7 +212,7 @@ const styles = StyleSheet.create({
     width: "80%",
   },
   selectionContainer: {
-    height: "10%",
+    height: "12.2%",
     padding: 10,
   },
   selectionTouchableOpacity: {
