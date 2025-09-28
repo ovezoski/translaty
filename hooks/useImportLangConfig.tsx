@@ -5,22 +5,24 @@ export const ALL_LANGUAGES = [
   { label: 'English', value: 'en' },
   { label: 'Deutsch', value: 'de' },
   { label: 'Français', value: 'fr' },
+  { label: 'Español', value: 'es' },
   { label: 'Македонски', value: 'mk' },
+  { label: 'Српски', value: 'sr' },
 ] as const
 
 export type LangCode = typeof ALL_LANGUAGES[number]['value']
 
 export type LangConfig = {
   sourceLang: LangCode
-  destLang: LangCode
+  destLang: LangCode[]
 }
 
 export const LANG_CONFIG_FILE_NAME: string = 'languages.txt'
-const DEFAULT_LANG_CONFIG: LangConfig = { sourceLang: 'en', destLang: 'de' }
+const DEFAULT_LANG_CONFIG: LangConfig = { sourceLang: 'en', destLang: ['de'] }
 
 export const useImportLangConfig = () => {
-  const [selectedSource, setSelectedSource] = useState<LangCode>('en');
-  const [selectedDest, setSelectedDest] = useState<LangCode>('de');
+  const [selectedSource, setSelectedSource] = useState<LangConfig['sourceLang']>('en');
+  const [selectedDest, setSelectedDest] = useState<LangConfig['destLang']>(['de']);
 
   const isLangConfigValid = useCallback((obj: unknown): obj is LangConfig => {
     return (
@@ -28,8 +30,9 @@ export const useImportLangConfig = () => {
       typeof obj === 'object' &&
       'sourceLang' in obj &&
       'destLang' in obj &&
+      Array.isArray(obj.destLang) &&
       ALL_LANGUAGES.some(lang => lang.value === obj.sourceLang) &&
-      ALL_LANGUAGES.some(lang => lang.value === obj.destLang)
+      ALL_LANGUAGES.some(lang => (obj.destLang as LangCode[]).includes(lang.value))
     );
   }, [])
 

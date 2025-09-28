@@ -1,19 +1,29 @@
 import { Image } from "expo-image";
-import { StyleSheet } from "react-native";
+import { StyleSheet, TouchableOpacity } from "react-native";
 
 import ParallaxScrollView from "@/components/ParallaxScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { router } from "expo-router";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 export default function HomeScreen() {
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }}
       headerImage={
-        <Image
-          source={require("@/assets/images/partial-react-logo.png")}
-          style={styles.reactLogo}
-        />
+        <>
+          <Image
+            source={require("@/assets/images/partial-react-logo.png")}
+            style={styles.reactLogo}
+          />
+        <TouchableOpacity 
+          onPress={() => router.push('/third')}
+          style={styles.settingsButton}
+        >
+          <Ionicons name="settings-outline" size={32} color="white" />
+        </TouchableOpacity>
+        </>
       }
     >
       <ThemedView>
@@ -46,5 +56,10 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     position: "absolute",
+  },
+  settingsButton: {
+    position: "absolute",
+    top: 56,
+    right: 19,
   },
 });

@@ -3,9 +3,9 @@ import { useImportLangConfig, LangCode } from '@/hooks/useImportLangConfig'
 
 type LangConfigContextType = {
   selectedSource: LangCode;
-  selectedDest: LangCode;
+  selectedDest: LangCode[];
   setSelectedSource: React.Dispatch<React.SetStateAction<LangCode>>;
-  setSelectedDest: React.Dispatch<React.SetStateAction<LangCode>>;
+  setSelectedDest: React.Dispatch<React.SetStateAction<LangCode[]>>;
 };
 
 type LangConfigProviderProps = {
