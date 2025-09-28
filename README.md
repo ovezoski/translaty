@@ -5,7 +5,19 @@
 И ако се притисне врз некој збор, ќе се повика Google Translate API за неколку јазици и како облачиња околу зборот ќе се дадат преводите на тој збор.
 Од кој на кои јазици ќе се преведува ќе има посебна страна за поставување (Settings).
 
-https://github.com/user-attachments/assets/99970369-1a86-42de-997f-65b6561c1932
+
+https://github.com/user-attachments/assets/bf1b6425-b902-404f-8099-a435d1479dc1
+
+<table>
+<tr>
+<td><img src="https://github.com/user-attachments/assets/b978d8e1-908e-4fc6-b243-2edb1490afc6" width="333" alt="IMG_1926" /></td>
+<td style="padding-left: 20px;"><img src="https://github.com/user-attachments/assets/357585e6-4480-4cfd-b7fd-ecb9743bb773" width="333" alt="IMG_1925" /></td>
+<td style="padding-left: 20px;"><img src="https://github.com/user-attachments/assets/066a7b3a-e901-40df-9767-f6ab60118fa2" width="333" alt="IMG_1927" /></td>
+</tr>
+</table>
+
+
+
 
 # Welcome to your Expo app 👋
 
