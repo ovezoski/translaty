@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, TouchableOpacity, StyleSheet, Text } from 'react-native';
+import { TouchableOpacity, StyleSheet, Text } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 type CheckboxProps = {
   label: string;
@@ -9,11 +10,22 @@ type CheckboxProps = {
 };
 
 const Checkbox: React.FC<CheckboxProps> = ({ label, checked, onPress, disabled = false }) => (
-  <TouchableOpacity style={styles.container} onPress={onPress} disabled={disabled}>
-    <View style={[styles.box, checked && styles.boxChecked, disabled && styles.boxDisabled]}>
-      {checked && <View style={styles.innerBox} />}
-    </View>
+  <TouchableOpacity
+    style={[
+      styles.container,
+      checked && styles.containerChecked,
+      disabled && styles.containerDisabled
+    ]}
+    onPress={onPress}
+    disabled={disabled}
+  >
     <Text style={styles.label}>{label}</Text>
+    {checked && (
+      <Ionicons name="checkmark-done-outline" size={21} color="white" />
+    )}
+    {disabled && (
+      <Ionicons name="remove-circle-outline" size={21} color="white" />
+    )}
   </TouchableOpacity>
 );
 
@@ -21,34 +33,21 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 8,
+    justifyContent: 'space-between',
+    paddingVertical: 20,
+    paddingHorizontal: 15,
+    height: 60,
+    borderRadius: 10,
   },
-  box: {
-    height: 24,
-    width: 24,
-    borderRadius: 4,
-    borderWidth: 2,
-    borderColor: '#777',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  boxChecked: {
-    borderColor: '#007AFF',
+  containerChecked: {
     backgroundColor: '#007AFF33',
   },
-  boxDisabled: {
-    borderColor: 'darkred',
-  },
-  innerBox: {
-    height: 12,
-    width: 12,
-    borderRadius: 2,
-    backgroundColor: '#007AFF',
+  containerDisabled: {
+    backgroundColor: 'rgba(200, 0, 0, 0.2)',
   },
   label: {
-    marginLeft: 12,
     fontSize: 16,
-    color: '#333',
+    color: 'white',
   },
 });
 

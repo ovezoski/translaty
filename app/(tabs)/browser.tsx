@@ -16,10 +16,11 @@ import {
 import { WebView } from "react-native-webview";
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from "expo-router";
+import * as Clipboard from 'expo-clipboard';
 
 const injectedCSS = `
   * {
-    -webkit-touch-callout: none; /* Disable iOS link preview */
+    -webkit-touch-callout: none !important;
   }
 `;
 
@@ -34,7 +35,7 @@ export default function Browser() {
   const webViewRef = useRef<WebView>(null);
 
   // const [text, setText] = useState<string>("https://www.finki.ukim.mk/mk/student-announcement");
-  const [text, setText] = useState<string>("https://www.google.com");
+  const [text, setText] = useState<string>("https://es.wikipedia.org/wiki/Wikipedia:Portada");
   const [urlToLoad, setUrlToLoad] = useState<string>("");
   const [canGoBack, setCanGoBack] = useState(false);
 
@@ -85,11 +86,19 @@ export default function Browser() {
     }
   };
 
+
   if (urlToLoad) {
     return (
       <ThemedView style={styles.flexContainer}>
         <WebView
           ref={webViewRef}
+          menuItems={[{ key: 'copy', label: 'Copy' }]}
+          onCustomMenuSelection={({ nativeEvent }) => {
+            const selectedKey = nativeEvent.key;
+            if (selectedKey.startsWith('copy')) {
+              Clipboard.setStringAsync(selection);
+            }
+          }}
           source={{ uri: urlToLoad }}
           style={styles.webview}
           onMessage={(event) => {
@@ -110,7 +119,9 @@ export default function Browser() {
             style.type = 'text/css';
             style.appendChild(document.createTextNode(\`${injectedCSS}\`));
             document.head.appendChild(style);
-            document.addEventListener('contextmenu', e => e.preventDefault());
+            document.addEventListener('contextmenu', e => {
+              e.preventDefault()
+            });
           `}
         />
         {selection && (
@@ -125,7 +136,7 @@ export default function Browser() {
                 contentContainerStyle={styles.selectionTouchableOpacity} 
                 showsVerticalScrollIndicator={false}
               >
-                <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                <View style={{ flexDirection: "row", justifyContent: "space-between", paddingRight: 5, }}>
                   <View style={{ width: "94%" }}>
                     <ThemedText type="defaultSemiBold">Selected Text:</ThemedText>
                     <ThemedText>{selection}</ThemedText>
@@ -133,7 +144,7 @@ export default function Browser() {
                   <View style={{ width: "6%" }}>
                     {selectionIsExpanded && (
                       <TouchableOpacity onPress={() => setSelectionIsExpanded(false)}>
-                        <ThemedText type="link" style={{ fontSize: 25, fontWeight: 700 }}>X</ThemedText>
+                        <Ionicons name="close-sharp" size={27} color="#0a7ea4" />
                       </TouchableOpacity>
                     )}
                   </View>
