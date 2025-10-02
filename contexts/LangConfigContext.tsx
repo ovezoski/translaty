@@ -2,10 +2,12 @@ import React, { createContext, useContext } from 'react';
 import { useImportLangConfig, LangCode } from '@/hooks/useImportLangConfig'
 
 type LangConfigContextType = {
-  selectedSource: LangCode;
-  selectedDest: LangCode[];
-  setSelectedSource: React.Dispatch<React.SetStateAction<LangCode>>;
-  setSelectedDest: React.Dispatch<React.SetStateAction<LangCode[]>>;
+  selectedSource: LangCode
+  selectedDest: LangCode[]
+  setSelectedSource: React.Dispatch<React.SetStateAction<LangCode>>
+  setSelectedDest: React.Dispatch<React.SetStateAction<LangCode[]>>
+  recentLanguages: LangCode[],
+  setRecentLanguages: React.Dispatch<React.SetStateAction<LangCode[]>>
 };
 
 type LangConfigProviderProps = {
