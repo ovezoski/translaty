@@ -35,7 +35,7 @@ export default function Browser() {
   const webViewRef = useRef<WebView>(null);
 
   // const [text, setText] = useState<string>("https://www.finki.ukim.mk/mk/student-announcement");
-  const [text, setText] = useState<string>("https://es.wikipedia.org/wiki/Wikipedia:Portada");
+  const [text, setText] = useState<string>("https://www.google.com");
   const [urlToLoad, setUrlToLoad] = useState<string>("");
   const [canGoBack, setCanGoBack] = useState(false);
 

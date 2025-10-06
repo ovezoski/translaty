@@ -1,11 +1,25 @@
-import React, { useState, useCallback, useRef } from 'react';
-import { ScrollView, StyleSheet, View, TouchableOpacity, Text } from 'react-native';
+import React, { useState, useCallback, useRef, useMemo } from 'react';
+import { StyleSheet, View, TouchableOpacity, Text, FlatList, TextInput } from 'react-native';
 import RadioButton from '@/components/RadioButton';
 import Checkbox from '@/components/Checkbox';
 import { ALL_LANGUAGES, LangCode, RECENT_LANGS_MAX_SIZE, updateLangConfigFile } from '@/hooks/useImportLangConfig';
 import { useLangConfig } from '@/contexts/LangConfigContext';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
+
+type TabDataItem = {
+  type: 'header' | 'searchField',
+  id: string,
+  label: string,
+} | {
+  type: 'selectedItem' | 'recentItem' | 'allLanguageItem'
+  id: string,
+  langCode: LangCode
+  label?: string
+} | {
+  type: 'empty'
+  id: string
+}
 
 export default function ThirdScreen() {
   const {
@@ -18,8 +32,84 @@ export default function ThirdScreen() {
   } = useLangConfig();
 
   const [activeTab, setActiveTab] = useState<'source' | 'target'>('source');
+
+  const [sourceSearchQuery, setSourceSearchQuery] = useState<string>('');
+  const [isSourceSearchFocused, setSourceSearchFocused] = useState<boolean>(false);
+  const [destSearchQuery, setDestSearchQuery] = useState<string>('');
+  const [isDestSearchFocused, setDestSearchFocused] = useState<boolean>(false);
+
+  const sourceFlatListRef = useRef<FlatList<TabDataItem>>(null)
+  const destFlatListRef = useRef<FlatList<TabDataItem>>(null)
   const recentUI = useRef<LangCode[]>(recentLanguages)
+  const selectedSourceUI = useRef<LangCode>(selectedSource)
   const selectedDestUI = useRef<LangCode[]>(selectedDest)
+
+const sourceTabData: TabDataItem[] = useMemo(() => [
+  (selectedSourceUI.current.length > 0 
+    ? { type: 'header' as const, id: 'selected', label: 'Last Selected' }
+    : { type: 'empty', id: 'selected' }
+  ),
+  { 
+    type: 'selectedItem' as const,
+    id: selectedSourceUI.current,
+    langCode: selectedSourceUI.current 
+  },
+  { type: 'header' as const, id: 'recent', label: 'Recent' },
+  ...recentUI.current
+    .filter(langCode => selectedSourceUI.current !== langCode)
+    .map(langCode => ({
+      type: 'recentItem' as const,
+      id: langCode,
+      langCode,
+    })),
+  { type: 'header' as const, id: 'allLanguages', label: 'All Languages' },
+  { type: 'searchField' as const, id: 'searchField', label: 'Search...' },
+  ...ALL_LANGUAGES.filter(
+    option =>
+      selectedSourceUI.current !== option.value &&
+      !recentUI.current.includes(option.value) &&
+      option.label.toLowerCase().startsWith(sourceSearchQuery.toLowerCase())
+  ).map(option => ({
+    type: 'allLanguageItem' as const,
+    id: option.value,
+    langCode: option.value,
+    label: option.label,
+  })),
+], [sourceSearchQuery])
+
+  const destTabData: TabDataItem[] = useMemo(() => [
+    (selectedDestUI.current.length > 0
+      ? { type: 'header' as const, id: 'selected', label: 'Last Selected' }
+      : { type: 'empty', id: 'selected' }
+    ),
+    ...selectedDestUI.current.map(langCode => ({
+      type: 'selectedItem' as const,
+      id: langCode,
+      langCode,
+    })),
+    { type: 'header' as const, id: 'recent', label: 'Recent' },
+    ...recentUI.current
+      .filter(langCode => !selectedDestUI.current.includes(langCode))
+      .map(langCode => ({
+        type: 'recentItem' as const,
+        id: langCode,
+        langCode,
+    })),
+    { type: 'header' as const, id: 'allLanguages', label: 'All Languages' },
+    { type: 'searchField' as const, id: 'searchField', label: 'Search...' },
+    ...ALL_LANGUAGES.filter(
+      option =>
+        !selectedDestUI.current.includes(option.value) &&
+        !recentUI.current.includes(option.value) && 
+        option.label.toLowerCase().startsWith(destSearchQuery.toLowerCase())
+    ).map(option => ({
+      type: 'allLanguageItem' as const,
+      id: option.value,
+      langCode: option.value,
+      label: option.label,
+    })),
+  ], [destSearchQuery])
+
 
   const getNewRecentLanguages = useCallback(
     (sourceVal: LangCode, recentLangsParam: LangCode[]): LangCode[] => {
@@ -87,113 +177,148 @@ export default function ThirdScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.container}>
+      <View style={styles.container}>
         {activeTab === 'source' && (
-          <View style={{ gap: 20 }}>
-            <View style={{ gap: 5 }}>
-              <View style={styles.titleFlex}>
-                <ThemedText style={styles.titleText}>Recent</ThemedText>
-              </View>
-              <View style={styles.titleDivider}></View>
-
-              {recentUI.current.map((langCode) => (
-                <RadioButton
-                  key={`recent-${langCode}`}
-                  label={ALL_LANGUAGES.find((lang) => lang.value === langCode)?.label ?? ''}
-                  selected={selectedSource === langCode}
-                  onPress={() => onPressSourceLanguage(langCode)}
-                />
-              ))}
-            </View>
-
-            <View style={{ gap: 5 }}>
-              <View style={styles.titleFlex}>
-                <ThemedText style={styles.titleText}>All Languages</ThemedText>
-              </View>
-              <View style={styles.titleDivider}></View>
-
-              {ALL_LANGUAGES
-                .filter(option => !recentUI.current.includes(option.value))
-                .map(option => (
-                  <RadioButton
-                    key={`source-${option.value}`}
-                    label={option.label}
-                    selected={selectedSource === option.value}
-                    onPress={() => onPressSourceLanguage(option.value)}
-                  />
-                ))}
-            </View>
-          </View>
+          <FlatList 
+            ref={sourceFlatListRef}
+            data={sourceTabData}
+            keyExtractor={item => item.type + '-' + item.id}
+            renderItem={({ item }) => {
+              switch (item.type) {
+                case 'header':
+                  return (
+                    <>
+                      <View style={[
+                        styles.titleFlex,
+                        item.id === 'selected' && { marginTop: 0 },
+                        item.id === 'recent' && selectedSourceUI.current.length === 0 && { marginTop: 0 },
+                      ]}>
+                        <ThemedText style={styles.titleText}>{item.label}</ThemedText>
+                      </View>
+                      <View style={styles.titleDivider} />
+                    </>
+                  );
+                case 'searchField':
+                  return (
+                    <View style={styles.searchFieldContainer}>
+                      <TextInput 
+                        placeholder={item.label}
+                        value={sourceSearchQuery}
+                        onChangeText={setSourceSearchQuery}
+                        onFocus={() => {
+                          setSourceSearchFocused(true)
+                          const indexOfSearchField = sourceTabData.findIndex((item) => item.type === 'searchField')
+                          sourceFlatListRef.current?.scrollToIndex({ index: indexOfSearchField, viewPosition: 0 })
+                        }}
+                        onBlur={() => setSourceSearchFocused(false)}
+                        style={[styles.searchField, isSourceSearchFocused && { borderColor: 'lightgrey' }]}
+                      />
+                    </View>
+                  );
+                case 'selectedItem':
+                  return (
+                    <RadioButton
+                      label={ALL_LANGUAGES.find(l => l.value === item.langCode)?.label ?? ''}
+                      selected={selectedSource === item.langCode}
+                      onPress={() => onPressSourceLanguage(item.langCode)}
+                    />
+                  );
+                case 'recentItem':
+                  return (
+                    <RadioButton
+                      label={ALL_LANGUAGES.find(l => l.value === item.langCode)?.label ?? ''}
+                      selected={selectedSource === item.langCode}
+                      onPress={() => onPressSourceLanguage(item.langCode)}
+                    />
+                  );
+                case 'allLanguageItem':
+                  return (
+                    <RadioButton
+                      label={item.label ?? ''}
+                      selected={selectedSource === item.langCode}
+                      onPress={() => onPressSourceLanguage(item.langCode)}
+                    />
+                  );
+                default:
+                  return null;
+              }
+            }}
+            contentContainerStyle={{ gap: 5, paddingBottom: 900 }}
+          />
         )}
 
         {activeTab === 'target' && (
-          <View style={{ gap: 20 }}>
-            {selectedDestUI.current.length > 0 && (
-              <View style={{ gap: 5 }}>
-                <View style={styles.titleFlex}>
-                  <ThemedText style={styles.titleText}>Selected</ThemedText>
-                </View>
-                <View style={styles.titleDivider}></View>
-
-                {selectedDestUI.current.map((langCode) => (
-                  <Checkbox
-                    key={`selected-${langCode}`}
-                    label={ALL_LANGUAGES.find((lang) => lang.value === langCode)?.label ?? ''}
-                    checked={selectedDest.includes(langCode)}
-                    onPress={() => onPressTargetLanguage(langCode)}
-                    disabled={selectedSource === langCode}
-                  />
-                ))}
-              </View>
-            )}
-
-            {recentUI.current
-              .filter((langCode) => !selectedDestUI.current.includes(langCode))
-              .length > 0 && (
-                <View style={{ gap: 5 }}>
-                  <View style={styles.titleFlex}>
-                    <ThemedText style={styles.titleText}>Recent</ThemedText>
-                  </View>
-                  <View style={styles.titleDivider}></View>
-
-                  {recentUI.current
-                    .filter((langCode) => !selectedDestUI.current.includes(langCode))
-                    .map((langCode) => (
-                      <Checkbox
-                        key={`recent-${langCode}`}
-                        label={ALL_LANGUAGES.find((lang) => lang.value === langCode)?.label ?? ''}
-                        checked={selectedDest.includes(langCode)}
-                        onPress={() => onPressTargetLanguage(langCode)}
-                        disabled={selectedSource === langCode}
+          <FlatList
+            ref={destFlatListRef}
+            data={destTabData}
+            keyExtractor={item => item.type + '-' + item.id}
+            renderItem={({ item }) => {
+              switch (item.type) {
+                case 'header':
+                  return (
+                    <>
+                      <View style={[
+                        styles.titleFlex,
+                        item.id === 'selected' && { marginTop: 0 },
+                        item.id === 'recent' && selectedDestUI.current.length === 0 && { marginTop: 0 },
+                      ]}>
+                        <ThemedText style={styles.titleText}>{item.label}</ThemedText>
+                      </View>
+                      <View style={styles.titleDivider} />
+                    </>
+                  );
+                case 'searchField':
+                  return (
+                    <View style={styles.searchFieldContainer}>
+                      <TextInput 
+                        placeholder={item.label}
+                        value={destSearchQuery}
+                        onChangeText={setDestSearchQuery}
+                        onFocus={() => {
+                          setDestSearchFocused(true)
+                          const indexOfSearchField = destTabData.findIndex((item) => item.type === 'searchField')
+                          destFlatListRef.current?.scrollToIndex({ index: indexOfSearchField, viewPosition: 0 })
+                        }}
+                        onBlur={() => setDestSearchFocused(false)}
+                        style={[styles.searchField, isDestSearchFocused && { borderColor: 'lightgrey' }]}
                       />
-                    ))}
-                </View>
-              )}
-
-            <View style={{ gap: 5 }}>
-              <View style={styles.titleFlex}>
-                <ThemedText style={styles.titleText}>All Languages</ThemedText>
-              </View>
-              <View style={styles.titleDivider}></View>
-
-              {ALL_LANGUAGES
-                .filter(option =>
-                  !selectedDestUI.current.includes(option.value) &&
-                  !recentUI.current.includes(option.value)
-                )
-                .map(option => (
-                  <Checkbox
-                    key={`dest-${option.value}`}
-                    label={option.label}
-                    checked={selectedDest.includes(option.value)}
-                    onPress={() => onPressTargetLanguage(option.value)}
-                    disabled={selectedSource === option.value}
-                  />
-                ))}
-            </View>
-          </View>
+                    </View>
+                  );
+                case 'selectedItem':
+                  return (
+                    <Checkbox
+                      label={ALL_LANGUAGES.find(l => l.value === item.langCode)?.label ?? ''}
+                      checked={selectedDest.includes(item.langCode)}
+                      onPress={() => onPressTargetLanguage(item.langCode)}
+                      disabled={selectedSource === item.langCode}
+                    />
+                  );
+                case 'recentItem':
+                  return (
+                    <Checkbox
+                      label={ALL_LANGUAGES.find(l => l.value === item.langCode)?.label ?? ''}
+                      checked={selectedDest.includes(item.langCode)}
+                      onPress={() => onPressTargetLanguage(item.langCode)}
+                      disabled={selectedSource === item.langCode}
+                    />
+                  );
+                case 'allLanguageItem':
+                  return (
+                    <Checkbox
+                      label={item.label ?? ''}
+                      checked={selectedDest.includes(item.langCode)}
+                      onPress={() => onPressTargetLanguage(item.langCode)}
+                      disabled={selectedSource === item.langCode}
+                    />
+                  );
+                default:
+                  return null;
+              }
+            }}
+            contentContainerStyle={{ gap: 5, paddingBottom: 900 }}
+          />
         )}
-      </ScrollView>
+      </View>
     </ThemedView>
   );
 }
@@ -235,6 +360,7 @@ const styles = StyleSheet.create({
     display: 'flex',
     flexDirection: 'row',
     justifyContent: 'center',
+    marginTop: 20
   },
   titleText: {
     paddingLeft: 5,
@@ -246,5 +372,20 @@ const styles = StyleSheet.create({
     height: 2,
     backgroundColor: '#333',
     opacity: 0.5,
+  },
+  searchFieldContainer: {
+    marginTop: 20,
+    marginBottom: 15,
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  searchField: {
+    color: 'white',
+    paddingVertical: 20,
+    paddingHorizontal: 15,
+    width: 275,
+    borderBottomWidth: 1,
+    borderRadius: 10,
+    borderColor: '#333',
   }
 });
