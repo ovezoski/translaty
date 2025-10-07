@@ -15,14 +15,32 @@ export type LangCode = typeof ALL_LANGUAGES[number]['value']
 export type LangConfig = {
   sourceLang: LangCode
   destLang: LangCode[]
+  recentLangs: LangCode[]
 }
 
 export const LANG_CONFIG_FILE_NAME: string = 'languages.txt'
-const DEFAULT_LANG_CONFIG: LangConfig = { sourceLang: 'en', destLang: ['de'] }
+export const RECENT_LANGS_MAX_SIZE = 3
+const DEFAULT_LANG_CONFIG: LangConfig = { sourceLang: 'en', destLang: ['de'], recentLangs: ['en', 'de', 'mk'] }
+
+export const updateLangConfigFile = (sourceVal: LangCode, destVal: LangCode[], recentVal: LangCode[]) => {
+  const langConfigFile = new File(Paths.document, LANG_CONFIG_FILE_NAME);
+  if (!langConfigFile.exists) {
+    return;
+  }
+
+  const newLangConfig: LangConfig = {
+    sourceLang: sourceVal,
+    destLang: destVal,
+    recentLangs: recentVal,
+  };
+  langConfigFile.write(JSON.stringify(newLangConfig));
+}
+
 
 export const useImportLangConfig = () => {
-  const [selectedSource, setSelectedSource] = useState<LangConfig['sourceLang']>('en');
-  const [selectedDest, setSelectedDest] = useState<LangConfig['destLang']>(['de']);
+  const [selectedSource, setSelectedSource] = useState<LangConfig['sourceLang']>(DEFAULT_LANG_CONFIG.sourceLang);
+  const [selectedDest, setSelectedDest] = useState<LangConfig['destLang']>(DEFAULT_LANG_CONFIG.destLang);
+  const [recentLanguages, setRecentLanguages] = useState<LangConfig['recentLangs']>(DEFAULT_LANG_CONFIG.recentLangs);
 
   const isLangConfigValid = useCallback((obj: unknown): obj is LangConfig => {
     return (
@@ -30,9 +48,12 @@ export const useImportLangConfig = () => {
       typeof obj === 'object' &&
       'sourceLang' in obj &&
       'destLang' in obj &&
-      Array.isArray(obj.destLang) &&
+      'recentLangs' in obj &&
       ALL_LANGUAGES.some(lang => lang.value === obj.sourceLang) &&
-      ALL_LANGUAGES.some(lang => (obj.destLang as LangCode[]).includes(lang.value))
+      Array.isArray(obj.destLang) &&
+      obj.destLang.every((lang) => ALL_LANGUAGES.some((opt) => opt.value === lang)) &&
+      Array.isArray(obj.recentLangs) &&
+      obj.recentLangs.every((lang) => ALL_LANGUAGES.some((opt) => opt.value === lang))
     );
   }, [])
 
@@ -64,8 +85,16 @@ export const useImportLangConfig = () => {
 
     setSelectedSource(importedConfig.sourceLang)
     setSelectedDest(importedConfig.destLang)
+    setRecentLanguages(importedConfig.recentLangs)
   }, [initReadLangConfig])
 
-  return { selectedSource, selectedDest, setSelectedSource, setSelectedDest }
+  return { 
+    selectedSource,
+    selectedDest,
+    setSelectedSource,
+    setSelectedDest,
+    recentLanguages,
+    setRecentLanguages,
+  }
 
 }
