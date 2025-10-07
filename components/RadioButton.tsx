@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, TouchableOpacity, StyleSheet, Text } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 type RadioButtonProps = {
   label: string;
@@ -10,11 +11,22 @@ type RadioButtonProps = {
 
 const RadioButton: React.FC<RadioButtonProps> = ({ label, selected, onPress, disabled = false }) => {
   return (
-    <TouchableOpacity style={styles.container} onPress={onPress} disabled={disabled}>
-      <View style={[styles.outerCircle, selected && styles.selectedOuterCircle, disabled && styles.disabledCircle]}>
-        {selected && <View style={styles.innerCircle} />}
-      </View>
+  <TouchableOpacity
+    style={[
+      styles.container,
+      selected && styles.containerSelected,
+      disabled && styles.containerDisabled
+    ]}
+    onPress={onPress}
+    disabled={disabled}
+  >
       <Text style={styles.label}>{label}</Text>
+      {selected && (
+        <Ionicons name="checkmark-done-outline" size={21} color="white" />
+      )}
+      {disabled && (
+        <Ionicons name="remove-circle-outline" size={21} color="white" />
+      )}
     </TouchableOpacity>
   );
 };
@@ -23,7 +35,17 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 8,
+    justifyContent: 'space-between',
+    paddingVertical: 20,
+    paddingHorizontal: 15,
+    height: 60,
+    borderRadius: 10,
+  },
+  containerSelected: {
+    backgroundColor: '#007AFF33',
+  },
+  containerDisabled: {
+    backgroundColor: 'rgba(200, 0, 0, 0.2)',
   },
   outerCircle: {
     height: 24,
@@ -47,9 +69,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#007AFF',
   },
   label: {
-    marginLeft: 12,
     fontSize: 16,
-    color: '#333',
+    color: 'white',
   },
 });
 
