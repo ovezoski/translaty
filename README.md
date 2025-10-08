@@ -5,8 +5,14 @@
 И ако се притисне врз некој збор, ќе се повика Google Translate API за неколку јазици и како облачиња околу зборот ќе се дадат преводите на тој збор.
 Од кој на кои јазици ќе се преведува ќе има посебна страна за поставување (Settings).
 
+<table>
+<tr>
+<td><video src="https://github.com/user-attachments/assets/2ffdfb9e-696c-4a93-91fd-2ff6f3607b19" width="480" controls></video>
+</td>
+<td style="padding-left: 20px;"><video src="https://github.com/user-attachments/assets/575810f2-0bd7-489e-8051-4ba0872b354a" width="480" controls></video></td>
+</tr>
+</table>
 
-https://github.com/user-attachments/assets/bf1b6425-b902-404f-8099-a435d1479dc1
 
 <table>
 <tr>
